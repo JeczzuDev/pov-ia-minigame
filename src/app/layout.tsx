@@ -9,6 +9,7 @@ import {
 } from '@clerk/nextjs'
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
+import UserSyncer from '../components/UserSyncer'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -30,6 +31,7 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode
 }>) {
+
   return (
     <ClerkProvider>
       <html lang="en">
@@ -43,6 +45,7 @@ export default function RootLayout({
               <UserButton />
             </SignedIn>
           </header>
+          <UserSyncer />
           {children}
         </body>
       </html>
