@@ -12,14 +12,74 @@ export async function POST(request: Request) {
 
     // Si viene associateUserId y matchId, es para asociar partida anónima a usuario
     if (associateUserId && matchId) {
-        // Actualizar match existente: asociar userId y volver pública
+        // 1. Verificar si el usuario existe en Supabase (con polling)
+        let userData = null;
+        let userError = null;
+        for (let i = 0; i < 10; i++) {  // 10 intentos, 200ms entre cada uno
+            const { data, error } = await supabase
+                .from('users')
+                .select('id')
+                .eq('id', associateUserId)
+                .single();
+            userData = data;
+            userError = error;
+            if (userData) break;
+            await new Promise(res => setTimeout(res, 200));
+        }
+
+        if (userError || !userData) {
+            return NextResponse.json({ error: 'Usuario no encontrado en Supabase' }, { status: 404 });
+        }
+
+        // 2. Obtener el prompt_id de la partida anónima
+        const { data: matchData, error: matchError } = await supabase
+            .from('matches')
+            .select('prompt_id')
+            .eq('id', matchId)
+            .single();
+
+        if (matchError || !matchData?.prompt_id) {
+            return NextResponse.json(
+                { error: 'Partida no encontrada o sin prompt asociado' },
+                { status: 404 }
+            );
+        }
+
+        // 3. Verificar si el usuario ya completó este prompt
+        const { data: existingMatches, error: existingError } = await supabase
+            .from('matches')
+            .select('id')
+            .eq('user_id', associateUserId)
+            .eq('prompt_id', matchData.prompt_id);
+
+        if (existingError) {
+            return NextResponse.json({ error: existingError.message }, { status: 500 });
+        }
+
+        // Si ya completó este prompt, rechazar la asociación
+        if (existingMatches && existingMatches.length > 0) {
+            return NextResponse.json(
+                {
+                    error: 'PROMPT_ALREADY_COMPLETED',
+                    message: 'Ya has completado este desafío con tu cuenta.'
+                },
+                { status: 400 }
+            );
+        }
+
+        // 4. Si no lo ha completado, asociar la partida
         const { error: updateError } = await supabase
             .from('matches')
-            .update({ user_id: associateUserId, is_anonymous: false })
+            .update({
+                user_id: associateUserId,
+                is_anonymous: false
+            })
             .eq('id', matchId);
+
         if (updateError) {
             return NextResponse.json({ error: updateError.message }, { status: 500 });
         }
+
         return NextResponse.json({ ok: true });
     }
 

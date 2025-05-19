@@ -28,31 +28,81 @@ type LeaderboardEntry = {
 export default function ResultPage() {
     const { matchId } = useParams();
     const router = useRouter();
-    
+
     const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [total, setTotal] = useState<number | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    
-    // Guard para evitar dobles llamadas (por StrictMode o race conditions)
-    const evalInProgress = useRef(false);
-    // User y su estado de carga
+
     const { user, isLoaded } = useUser();
-    // Estado para saber si el usuario es anónimo
     const [isAnonymous, setIsAnonymous] = useState<boolean>(false);
-    
+    const [accessDenied, setAccessDenied] = useState<boolean>(false);
+    const prevUserId = useRef<string | null>(null);
+    const evalInProgress = useRef(false);
+
     useEffect(() => {
-        if (!matchId) return;
+        if (!matchId || !isLoaded) return;
+        (async () => {
+            const { data: matchData } = await supabase
+                .from('matches')
+                .select('user_id, is_anonymous')
+                .eq('id', matchId)
+                .single();
+
+            setIsAnonymous(!matchData?.user_id && matchData?.is_anonymous);
+
+            if (matchData?.user_id) {
+                if (!user || user.id !== matchData.user_id) {
+                    setAccessDenied(true);
+                    return;
+                }
+            }
+        })();
+    }, [matchId, isLoaded, user]);
+
+    useEffect(() => {
         if (evalInProgress.current) return;
+        if (!isLoaded || !isAnonymous || !user || prevUserId.current === user.id) return;
+        prevUserId.current = user.id;
         evalInProgress.current = true;
+        fetch('/api/matches', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                associateUserId: user.id,
+                matchId,
+            }),
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.ok) {
+                    setIsAnonymous(false);
+                    window.location.reload();
+                } else if (data.error === 'PROMPT_ALREADY_COMPLETED') {
+                    // router.push('/dashboard?error=prompt_already_completed');
+                    router.push('/dashboard');
+                } else {
+                    setError(data.message || 'Error al asociar la partida');
+                }
+            })
+            .catch(err => {
+                console.error('Error en associateMatch:', err);
+                setError('Error al asociar la partida. Inténtalo de nuevo.');
+            })
+            .finally(() => {
+                evalInProgress.current = false;
+            });
+    }, [isLoaded, isAnonymous, user, matchId]);
 
-        async function runEvaluationFlow() {
-            setLoading(true);
-            setError(null);
-
+    useEffect(() => {
+        if (evalInProgress.current) return;
+        if (accessDenied || !matchId) return;
+        evalInProgress.current = true;
+        setLoading(true);
+        setError(null);
+        (async () => {
             try {
-                // Comprobar si ya hay evaluaciones para esta partida
                 const { data: existing, error: exError } = await supabase
                     .from('ai_evaluations')
                     .select('score, explanation, submitted_resources(url)')
@@ -61,7 +111,6 @@ export default function ResultPage() {
                 if (exError) throw exError;
 
                 if (existing && existing.length === 0) {
-                    // Si no existen, lanzar la evaluación automática
                     const resEval = await fetch('/api/evaluate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -75,7 +124,6 @@ export default function ResultPage() {
                     setTotal(totalScore);
                 }
 
-                // Volver a obtener las evaluaciones completas
                 const { data: rawEvals, error: evError } = await supabase
                     .from('ai_evaluations')
                     .select('id, score, explanation, submitted_resources(url)')
@@ -89,19 +137,16 @@ export default function ResultPage() {
                     score: e.score,
                     explanation: e.explanation,
                     url: e.submitted_resources.url ?? '',
-                  }));
-                
+                }));
+
                 setEvaluations(normEvals || []);
 
-                // Si no se obtuvo total en la evaluación, calcularlo localmente
                 if (total === null) {
                     const sum = (normEvals || []).reduce((acc, e) => acc + e.score, 0);
                     setTotal(sum);
                 }
 
-                // Obtener leaderboard
                 let leaderboardUrl = '/api/leaderboard';
-                // Si el usuario NO está autenticado, incluir el matchId anónimo para mostrar su posición
                 const { data: matchData, error: matchError } = await supabase
                     .from('matches')
                     .select('user_id, is_anonymous')
@@ -121,29 +166,15 @@ export default function ResultPage() {
             } catch (err: any) {
                 setError(err.message);
             } finally {
+                evalInProgress.current = false;
                 setLoading(false);
             }
-        }
+        })();
+    }, [accessDenied, matchId]);
 
-        runEvaluationFlow().finally(() => {
-            evalInProgress.current = false;
-        });
-
-        async function checkAnon() {
-            const { data: matchData } = await supabase
-                .from('matches')
-                .select('user_id, is_anonymous')
-                .eq('id', matchId)
-                .single();
-            
-            setIsAnonymous(!matchData?.user_id && matchData?.is_anonymous);
-        }
-
-        if (matchId) checkAnon();
-    }, [matchId]);
-
-    if (loading) return <p className="p-4">Evaluando tus recursos y cargando resultados…</p>;
+    if (accessDenied) return <p className="p-4 text-red-600">No puedes visualizar los resultados de una partida ajena.</p>;
     if (error) return <p className="p-4 text-red-600">Error: {error}</p>;
+    if (loading) return <p className="p-4">Evaluando tus recursos y cargando resultados…</p>;
 
     return (
         <main className="max-w-2xl mx-auto p-4 space-y-6">
@@ -187,11 +218,9 @@ export default function ResultPage() {
             </section>
 
             <section className="flex gap-4">
-                {isLoaded && isAnonymous ? (
+                {isLoaded && !user ? (
                     <SignUpButton mode="modal">
-                        <button
-                            className="flex-1 bg-blue-600 text-white rounded p-2"
-                        >
+                        <button className="flex-1 bg-blue-600 text-white rounded p-2">
                             Registrate para guardar tu progreso
                         </button>
                     </SignUpButton>
