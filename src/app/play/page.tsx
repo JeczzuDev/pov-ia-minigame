@@ -65,15 +65,21 @@ export default function PlayPage() {
         setError(null);
 
         try {
+            // Validar URLs y comprobar que no se repitan
             const validUrls = urls.filter((u) => u.trim().length > 0);
+            const uniqueUrls = [...new Set(validUrls)];
+            if (uniqueUrls.length !== validUrls.length) {
+                setError('No se permiten URLs duplicadas');
+                return;
+            }
             
             const completedAt = new Date().toISOString();
-        const res = await fetch('/api/matches', {
+            const res = await fetch('/api/matches', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     promptId: prompt.id, 
-                    resources: validUrls,
+                    resources: uniqueUrls,
                     timeElapsed: timeElapsedInSeconds,
                     completedAt: completedAt
                 }),
