@@ -83,10 +83,14 @@ export async function POST(request: Request) {
         return NextResponse.json({ ok: true });
     }
 
-    if (!promptId || !resources || resources.length === 0) {
-        return NextResponse.json({ error: 'Missing promptId or resources' }, { status: 400 });
+    if (!promptId) {
+        return NextResponse.json({ error: 'Missing promptId' }, { status: 400 });
     }
 
+    // Obtener tiempo transcurrido y fecha de finalización
+    const timeElapsed = body.timeElapsed || 0;
+    const completedAt = body.completedAt || new Date().toISOString();
+    
     // Crear la partida (match)
     const isAnonymous = !userId;
     const { data: match, error: matchError } = await supabase
@@ -95,9 +99,11 @@ export async function POST(request: Request) {
             user_id: userId,
             prompt_id: promptId,
             is_anonymous: isAnonymous,
+            completed_at: completedAt,
+            time_elapsed: timeElapsed,
             // score_ai y score_community se completarán tras la evaluación
         })
-        .select('id')
+        .select('id, time_elapsed, completed_at')
         .single();
 
     if (matchError || !match) {
@@ -119,6 +125,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: resError.message }, { status: 500 });
     }
 
-    // Devolver OK + matchId
-    return NextResponse.json({ matchId: newMatchId });
+    // Si está autenticado, devolver el ID de la partida
+    return NextResponse.json({ matchId: match.id });
 }

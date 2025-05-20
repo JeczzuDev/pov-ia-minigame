@@ -18,6 +18,42 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'matchId requerido' }, { status: 400 });
         }
 
+        // Obtener id del prompt de la partida
+        const { data: match } = await supabase
+            .from('matches')
+            .select('prompt_id, time_elapsed')
+            .eq('id', matchId)
+            .single();
+
+        // Obtener prompt y recursos
+        const { data: promptData } = await supabase
+            .from('prompts')
+            .select('description')
+            .eq('id', match?.prompt_id)
+            .single();
+
+        const { data: resources } = await supabase
+            .from('submitted_resources')
+            .select('id, url')
+            .eq('match_id', matchId);
+
+        if (!promptData || !resources) {
+            return NextResponse.json(
+                { error: 'Datos incompletos', match, promptData, resources },
+                { status: 404 }
+            );
+        }
+
+        if (resources.length === 0) {
+            // Actualizar puntaje en matches
+            await supabase
+                .from('matches')
+                .update({ score_ai: 0 })
+                .eq('id', matchId);
+
+            return NextResponse.json({ total: 0, message: 'No se encontraron recursos' }, { status: 200 });
+        }
+
         // Verificar si ya existen evaluaciones para este matchId
         const { data: existingEvaluations, error: existingError } = await supabase
             .from('ai_evaluations')
@@ -45,32 +81,6 @@ export async function POST(request: Request) {
             .select('*')
             .eq('id', modelId)
             .single();
-
-        // Obtener promt id de la partida
-        const { data: match } = await supabase
-            .from('matches')
-            .select('prompt_id')
-            .eq('id', matchId)
-            .single();
-
-        // Obtener prompt y recursos
-        const { data: promptData } = await supabase
-            .from('prompts')
-            .select('description')
-            .eq('id', match?.prompt_id)
-            .single();
-
-        const { data: resources } = await supabase
-            .from('submitted_resources')
-            .select('id, url')
-            .eq('match_id', matchId);
-
-        if (!promptData || !resources) {
-            return NextResponse.json(
-                { error: 'Datos incompletos', match, promptData, resources },
-                { status: 404 }
-            );
-        }
 
         const resourcesIds = resources.map((resource) => resource.id).join(', ');
         const resourcesUrls = resources.map((resource) => resource.url).join(', ');
@@ -116,19 +126,32 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: insertError.message }, { status: 500 });
         }
 
-        // Calcular correctamente el total score
-        let totalScore = 0;
+        // Calcular puntaje base
+        let baseScore = 0;
         evaluations.forEach((evaluation) => {
-            totalScore += evaluation.score;
+            baseScore += evaluation.score;
         });
+
+        // Calcular puntos por tiempo (5 puntos por cada 10 segundos, máximo 50 segundos)
+        const timeElapsed = match?.time_elapsed || 0;
+        const timeBonus = Math.max(0, 5 - Math.ceil(timeElapsed / 10));
+        const totalScore = baseScore + timeBonus;
 
         // Actualizar puntaje en matches
         await supabase
             .from('matches')
-            .update({ score_ai: totalScore })
+            .update({ 
+                score_ai: baseScore,
+                time_bonus: timeBonus
+            })
             .eq('id', matchId);
 
-        return NextResponse.json({ total: totalScore });
+        return NextResponse.json({ 
+            total: totalScore,
+            baseScore: baseScore,
+            timeBonus: timeBonus,
+            timeElapsed: timeElapsed
+        });
     } catch (error) {
         return NextResponse.json({ error: 'Error al evaluar recursos' }, { status: 500 });
     }
