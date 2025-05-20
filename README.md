@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# POV-IA 🧠🔍
 
-## Getting Started
+Juego web para resolver problemas con inteligencia humana asistida por recursos. 
+Compite contra ti mismo (o el ranking) encontrando los mejores recursos para responder un desafío, y deja que una IA puntúe tus decisiones.
 
-First, run the development server:
+## 🚀 Demo
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+🔗 https://pov-ia.vercel.app/
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📸 Capturas
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+![Pantalla de juego](./screenshots/play.png)
+![Pantalla de resultados](./screenshots/result.png)
+![Dashboard](./screenshots/dashboard.png)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🎮 ¿Cómo se juega?
 
-## Learn More
+1. Entra a la plataforma y recibe un desafío (ej: "Aprender a crear una API con Next.js").
+2. Ingresa entre 1 y 4 URLs que consideres útiles para resolver el problema (videos, blogs, documentación…).
+3. Una IA evalúa los recursos por su precisión, originalidad, claridad y valor complementario.
+4. Recibes una puntuación total y puedes comparar tu resultado en el leaderboard.
+5. Si juegas como anónimo, puedes registrarte luego para guardar tu partida.
 
-To learn more about Next.js, take a look at the following resources:
+### 🔓 ¿Hay que registrarse?
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+No es obligatorio. Puedes jugar como anónimo, pero si deseas guardar tu historial y aparecer en el ranking, deberás crear una cuenta. Clerk se encarga de la autenticación de forma segura.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 🧠 Reglas del juego
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- El puntaje se calcula automáticamente por IA, en base a:  
+  precisión técnica, detalle, utilidad práctica, claridad, originalidad y complementariedad.
+- Cada nivel entrega un prompt único y progresivo.
+- No puedes repetir desafíos ya completados.
+- Solo puedes jugar una vez por prompt.
+- Los mejores puntajes aparecen en el ranking global acumulado.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 🛠️ Tecnologías usadas
+
+- [Next.js 14](https://nextjs.org/)
+- [Clerk](https://clerk.dev/) – autenticación
+- [Supabase](https://supabase.com/) – base de datos y almacenamiento
+- [OpenAI / Gemini / Anthropic](https://platform.openai.com/) – evaluación automática
+- [Tailwind CSS](https://tailwindcss.com/) – diseño
+- Vercel – hosting
+
+---
+
+## 🧪 Cómo se usó Clerk
+
+- Autenticación completa (sign in, sign up, user info)
+- Protección de rutas con `middleware.ts`
+- Asociación de partidas a usuarios registrados
+- Asociación retroactiva de partidas anónimas al registrarse
+- Visualización de historial privado en el dashboard
+
+---
+
+## 💡 ¿Por qué esta idea?
+
+POV-IA busca explorar un ángulo creativo: ¿cómo se comportaría una persona si toma el rol de una IA?
+Aquí tú actúas como un modelo de lenguaje humano: evalúas un problema y respondes con los mejores recursos posibles.
+
+---
+
+## 📅 Hackatón Clerk 2025
+
+Este proyecto fue desarrollado como parte del concurso organizado por [@midudev](https://github.com/midudev) en colaboración con [Clerk](https://clerk.dev/).
+
+- Fecha límite: 20 de mayo de 2025
+- Votaciones en directo: 21 de mayo de 2025
+
+---
+
+## ✍️ Creador
+
+Desarrollado con ❤️ por JeczzuDev 👤 para el Hackatón Clerk 2025
+
+---
+
+## 🧷 Licencia
+
+MIT
