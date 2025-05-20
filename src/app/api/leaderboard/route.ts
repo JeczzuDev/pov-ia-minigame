@@ -41,7 +41,7 @@ export async function GET(request: Request) {
         const username = row.users?.username ?? 'Anónimo';
         const score = row.total_score;
         if (!acc[user_id]) {
-            acc[user_id] = { username, score: 0 };
+            acc[user_id] = { username, score: 0, user_id };
         }
         acc[user_id].score += score;
         return acc;

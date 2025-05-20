@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import supabase from '@/lib/supabaseClient';
+import { Leaderboard } from '@/components/Leaderboard';
 
 type LeaderboardEntry = {
   username: string;
@@ -83,14 +84,15 @@ export default function DashboardPage() {
 
       <section>
         <h2 className="text-xl font-semibold mb-2">Leaderboard Global</h2>
-        <ol className="list-decimal list-inside space-y-1">
-          {leaderboard.length === 0 && <li>No hay datos aún.</li>}
-          {leaderboard.map((entry, i) => (
-            <li key={i}>
-              <strong>{entry.username}</strong> — {entry.score}
-            </li>
-          ))}
-        </ol>
+        {leaderboard.length > 0 && (
+          <Leaderboard
+            data={leaderboard}
+            title="Mejores Jugadores"
+            className="mt-6"
+            currentUserId={user?.id}
+            showSignUpButton={!user}
+          />
+        )}
       </section>
 
       {user && history.length > 0 && (
@@ -128,7 +130,7 @@ export default function DashboardPage() {
       <section className="flex gap-4">
         <button
           onClick={() => router.push('/play')}
-          className="flex-1 bg-blue-600 text-white rounded p-2"
+          className="flex-1 bg-blue-600 text-white rounded p-2 cursor-pointer hover:bg-blue-700 transition-colors"
         >
           Empezar a Jugar
         </button>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useUser, SignUpButton } from '@clerk/nextjs';
+import { useUser } from '@clerk/nextjs';
 import supabase from '@/lib/supabaseClient';
 import { Leaderboard } from '@/components/Leaderboard';
 
@@ -257,24 +257,18 @@ export default function ResultPage() {
                     className="mt-6"
                     showTopThreeMedals={true}
                     maxItems={10}
+                    currentUserId={user?.id}
+                    showSignUpButton={!user}
                 />
             </div>
 
             <section className="flex gap-4">
-                {isLoaded && !user ? (
-                    <SignUpButton mode="modal">
-                        <button className="flex-1 bg-blue-600 text-white rounded p-2 cursor-pointer hover:bg-blue-700 transition-colors">
-                            Registrate para guardar tu progreso
-                        </button>
-                    </SignUpButton>
-                ) : (
-                    <button
-                        onClick={() => router.push('/play')}
-                        className="flex-1 bg-blue-600 text-white rounded p-2 cursor-pointer hover:bg-blue-700 transition-colors"
-                    >
-                        Siguiente Desafío
-                    </button>
-                )}
+                <button
+                    onClick={() => router.push('/play')}
+                    className="flex-1 bg-blue-600 text-white rounded p-2 cursor-pointer hover:bg-blue-700 transition-colors"
+                >
+                    Siguiente Desafío
+                </button>
                 <button
                     onClick={() => router.push('/dashboard')}
                     className="flex-1 border border-blue-600 text-blue-600 rounded p-2 cursor-pointer hover:bg-blue-600 hover:text-white transition-colors"
