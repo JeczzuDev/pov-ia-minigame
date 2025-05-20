@@ -8,23 +8,38 @@ export async function GET(request: Request) {
         `and(user_id.not.is.null,is_anonymous.not.eq.true),id.eq.${includeMatchId}` :
         'and(user_id.not.is.null,is_anonymous.eq.false)';
 
-    const query = supabase
+    // Primero obtenemos los datos sin ordenar
+    const { data, error } = await supabase
         .from('matches')
-        .select('id, score_ai, user_id, is_anonymous, users(username)')
+        .select(`
+            id,
+            time_elapsed,
+            time_bonus,
+            score_ai,
+            user_id,
+            is_anonymous,
+            users(username)
+        `)
         .or(queryMatchId)
-        .order('score_ai', { ascending: false });
-
-    const { data, error } = await query;
+        .limit(100);
 
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Calcular el total_score manualmente y ordenar
+    const sortedData = [...data]
+        .map(row => ({
+            ...row,
+            total_score: (row.score_ai || 0) + (row.time_bonus || 0)
+        }))
+        .sort((a, b) => b.total_score - a.total_score);
+
     // Calcular total_score por usuario
-    const leaderboard = data.reduce((acc: any, row: any) => {
+    const leaderboard = sortedData.reduce((acc: any, row: any) => {
         const user_id = row.user_id;
         const username = row.users?.username ?? 'Anónimo';
-        const score = row.score_ai;
+        const score = row.total_score;
         if (!acc[user_id]) {
             acc[user_id] = { username, score: 0 };
         }
