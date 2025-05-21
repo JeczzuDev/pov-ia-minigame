@@ -30,8 +30,12 @@ type MatchEntry = {
 
 // Tipo para la respuesta de Supabase
 interface SupabaseMatch {
+  id: string;
   started_at: string;
+  completed_at: string | null;
   score_ai: number;
+  time_elapsed: number;
+  time_bonus: number;
   prompts: Prompt | Prompt[] | null;
 }
 
@@ -74,9 +78,7 @@ export default function DashboardPage() {
 
           if (matchesError) throw matchesError;
 
-          console.log(matches);
-
-          const normMatches: MatchEntry[] = (matches ?? []).map((m: any) => {
+          const normMatches: MatchEntry[] = (matches ?? []).map((m: SupabaseMatch) => {
             const prompt = Array.isArray(m.prompts) ? m.prompts[0] : m.prompts;
             return {
               id: m.id,

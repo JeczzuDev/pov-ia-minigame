@@ -37,10 +37,12 @@ export default function RootLayout({
     <ClerkProvider appearance={
       { baseTheme: dark,
         variables: {
-          colorPrimary: '#1c398e',
+          colorPrimary: '#ffffff',
           colorBackground: '#0a0a0a',
           colorText: '#ffffff',
-          colorTextOnPrimaryBackground: '#ffffff',
+          colorTextSecondary: '#ffffff',
+          colorInputText: '#ffffff',
+          colorTextOnPrimaryBackground: '#0a0a0a',
         } }}>
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
