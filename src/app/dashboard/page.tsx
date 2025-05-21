@@ -11,14 +11,23 @@ type LeaderboardEntry = {
   score: number;
 };
 
+interface Prompt {
+  level: number;
+  title: string;
+}
+
 type MatchEntry = {
   started_at: string;
   score_ai: number;
-  prompts: {
-    level: number;
-    title: string;
-  }[];
+  prompts: Prompt | null;
 };
+
+// Tipo para la respuesta de Supabase
+interface SupabaseMatch {
+  started_at: string;
+  score_ai: number;
+  prompts: Prompt | Prompt[] | null;
+}
 
 export default function DashboardPage() {
   const { user, isLoaded } = useUser();
@@ -51,10 +60,14 @@ export default function DashboardPage() {
 
           if (matchesError) throw matchesError;
 
-          const normMatches: MatchEntry[] = (matches ?? []).map((m: MatchEntry) => ({
+          console.log(matches);
+
+          const normMatches: MatchEntry[] = (matches ?? []).map((m: SupabaseMatch) => ({
             started_at: m.started_at,
             score_ai: m.score_ai,
-            prompts: m.prompts,
+            prompts: Array.isArray(m.prompts) ?
+              m.prompts[0] || null :
+              m.prompts || { level: 0, title: 'Sin título' },
           }));
 
           setHistory(normMatches || []);
@@ -109,8 +122,8 @@ export default function DashboardPage() {
                   <td className="border p-2 text-center">
                     {new Date(m.started_at).toLocaleDateString()}
                   </td>
-                  <td className="border p-2 text-center">{m.prompts[0].level}</td>
-                  <td className="border p-2">{m.prompts[0].title}</td>
+                  <td className="border p-2 text-center">{m.prompts?.level || 0}</td>
+                  <td className="border p-2">{m.prompts?.title || 'Sin título'}</td>
                   <td className="border p-2 text-center">{m.score_ai}</td>
                 </tr>
               ))}
@@ -126,7 +139,7 @@ export default function DashboardPage() {
       <section className="flex gap-4">
         <button
           onClick={() => router.push('/play')}
-          className="flex-1 bg-blue-600 text-white rounded p-2 cursor-pointer hover:bg-blue-700 transition-colors"
+          className="flex-1 bg-blue-900 text-white font-semibold rounded p-2 cursor-pointer hover:bg-blue-900/75 transition-colors"
         >
           Empezar a Jugar
         </button>
