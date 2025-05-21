@@ -1,4 +1,3 @@
-// src/app/dashboard/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -18,7 +17,7 @@ type MatchEntry = {
   prompts: {
     level: number;
     title: string;
-  };
+  }[];
 };
 
 export default function DashboardPage() {
@@ -52,19 +51,16 @@ export default function DashboardPage() {
 
           if (matchesError) throw matchesError;
 
-          const normMatches: MatchEntry[] = (matches ?? []).map((m: any) => ({
+          const normMatches: MatchEntry[] = (matches ?? []).map((m: MatchEntry) => ({
             started_at: m.started_at,
             score_ai: m.score_ai,
-            prompts: {
-              level: m.prompts.level,
-              title: m.prompts.title,
-            },
+            prompts: m.prompts,
           }));
 
           setHistory(normMatches || []);
         }
-      } catch (err: any) {
-        setError(err.message || 'Error cargando dashboard');
+      } catch (error) {
+        setError((error as Error)?.message || 'Error cargando dashboard');
       } finally {
         setLoading(false);
       }
@@ -113,8 +109,8 @@ export default function DashboardPage() {
                   <td className="border p-2 text-center">
                     {new Date(m.started_at).toLocaleDateString()}
                   </td>
-                  <td className="border p-2 text-center">{m.prompts.level}</td>
-                  <td className="border p-2">{m.prompts.title}</td>
+                  <td className="border p-2 text-center">{m.prompts[0].level}</td>
+                  <td className="border p-2">{m.prompts[0].title}</td>
                   <td className="border p-2 text-center">{m.score_ai}</td>
                 </tr>
               ))}

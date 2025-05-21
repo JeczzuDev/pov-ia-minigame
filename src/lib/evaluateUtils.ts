@@ -1,6 +1,11 @@
 import { openai, anthropic, gemini } from './aiClients';
 
-export async function evaluateWithModel(model: any, prompt: string): Promise<any> {
+interface Model {
+    provider: string;
+    name: string;
+}
+
+export async function evaluateWithModel(model: Model, prompt: string): Promise<string> {
     try {
         switch (model.provider) {
             case 'openai':
@@ -34,7 +39,7 @@ export async function evaluateWithModel(model: any, prompt: string): Promise<any
             }
             case 'gemini': {
                 const result = await gemini.models.generateContentStream({ model: model.name, contents: prompt });
-                let chunks = [];
+                const chunks: string[] = [];
                 for await (const chunk of result) {
                     if (chunk && typeof chunk.text === 'string') {
                         chunks.push(chunk.text);
@@ -48,12 +53,8 @@ export async function evaluateWithModel(model: any, prompt: string): Promise<any
             default:
                 throw new Error(`Proveedor no soportado: ${model.provider}`);
         }
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error en evaluateWithModel:', error);
-        return `ERROR: ${error.message || error}`;
+        return `ERROR: ${(error as Error).message || error}`;
     }
-}
-
-export async function evaluateWithFakeModel(model: any, prompt: string): Promise<any> {
-    return '4';
 }

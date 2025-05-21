@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 type Prompt = { id: number; title: string; description: string; level: number };
 
@@ -19,7 +19,7 @@ export default function PlayPage() {
     const [timeLeft, setTimeLeft] = useState<number>(GAME_DURATION);
     const [startTime, setStartTime] = useState<number | null>(null);
     const router = useRouter();
-    const { isLoaded, user } = useUser();
+    const { isLoaded } = useUser();
     const fetchInProgress = useRef(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const startTimeRef = useRef<number | null>(null);
@@ -80,6 +80,7 @@ export default function PlayPage() {
                 body: JSON.stringify({ 
                     promptId: prompt.id, 
                     resources: uniqueUrls,
+                    startTime: startTime,
                     timeElapsed: timeElapsedInSeconds,
                     completedAt: completedAt
                 }),
@@ -90,9 +91,8 @@ export default function PlayPage() {
             
             // Redirigir a la pantalla de resultados
             router.push(`/play/result/${json.matchId}`);
-            
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: Error | unknown) {
+            setError((err as Error)?.message || 'Error creando partida');
             setLoading(false);
         }
     };
@@ -152,7 +152,7 @@ export default function PlayPage() {
         if (!loading && timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
-            await handleSubmit(new Event('submit') as any);
+            await handleSubmit(new Event('submit') as unknown as React.FormEvent<HTMLFormElement>);
         }
     };
 

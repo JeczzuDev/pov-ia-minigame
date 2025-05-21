@@ -6,13 +6,6 @@ import { useUser } from '@clerk/nextjs';
 import supabase from '@/lib/supabaseClient';
 import { Leaderboard } from '@/components/Leaderboard';
 
-type RawEvaluation = {
-    id: number;
-    score: number;
-    explanation: string;
-    submitted_resources: { url: string }[];
-};
-
 type Evaluation = {
     id: number;
     score: number;
@@ -98,7 +91,7 @@ export default function ResultPage() {
             .finally(() => {
                 evalInProgress.current = false;
             });
-    }, [isLoaded, isAnonymous, user, matchId]);
+    }, [isLoaded, isAnonymous, user, matchId, router]);
 
     // obtener resultados
     useEffect(() => {
@@ -148,7 +141,7 @@ export default function ResultPage() {
         };
 
         fetchResults();
-    }, [matchId, accessDenied]);
+    }, [matchId, accessDenied, router]);
 
     if (accessDenied) return <p className="p-4 text-red-600">No puedes visualizar los resultados de una partida ajena.</p>;
     if (error) return <p className="p-4 text-red-600">Error: {error}</p>;

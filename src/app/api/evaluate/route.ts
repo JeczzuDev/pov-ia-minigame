@@ -2,14 +2,6 @@ import { NextResponse } from 'next/server';
 import supabase from '@/lib/supabaseClient';
 import { evaluateWithModel } from '@/lib/evaluateUtils';
 
-interface Evaluation {
-    match_id: string;
-    resource_id: string;
-    model_id: string;
-    score: number;
-    explanation: string;
-}
-
 export async function POST(request: Request) {
     try {
         // Leer body

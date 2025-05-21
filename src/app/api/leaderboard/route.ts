@@ -35,17 +35,44 @@ export async function GET(request: Request) {
         }))
         .sort((a, b) => b.total_score - a.total_score);
 
+    // Definir tipos para los datos
+    interface LeaderboardRow {
+        id: string;
+        time_elapsed: number;
+        time_bonus: number;
+        score_ai: number;
+        user_id: string;
+        is_anonymous: boolean;
+        users: { username: string }[];
+        total_score: number;
+    }
+
+    interface LeaderboardEntry {
+        username: string;
+        score: number;
+        user_id: string;
+    }
+
     // Calcular total_score por usuario
-    const leaderboard = sortedData.reduce((acc: any, row: any) => {
+    const leaderboard = sortedData.reduce<Record<string, LeaderboardEntry>>((acc, row: LeaderboardRow) => {
+        let username = 'Anónimo';
+
+        if (Array.isArray(row.users) && row.users.length > 0) {
+            // Si es un array, tomar el primer elemento
+            username = row.users[0]?.username as string || 'Anónimo';
+        } else if (row.users && typeof row.users === 'object' && 'username' in row.users) {
+            // Si es un objeto con propiedad username
+            username = row.users.username as string;
+        }
+
         const user_id = row.user_id;
-        const username = row.users?.username ?? 'Anónimo';
         const score = row.total_score;
         if (!acc[user_id]) {
-            acc[user_id] = { username, score: 0, user_id };
+            acc[user_id] = { username, score, user_id };
         }
         acc[user_id].score += score;
         return acc;
-    }, {} as Record<string, { username: string; score: number; user_id: string }>);
+    }, {});
 
     return NextResponse.json({ leaderboard: Object.values(leaderboard) });
 }
