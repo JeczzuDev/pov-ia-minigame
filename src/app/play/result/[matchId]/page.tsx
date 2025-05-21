@@ -172,19 +172,19 @@ export default function ResultPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
-                            <p className="text-sm text-blue-600 dark:text-blue-300">Puntaje Base</p>
-                            <p className="text-2xl font-bold text-blue-800 dark:text-blue-100">{baseScore}</p>
+                        <div className="bg-blue-900/30 p-4 rounded-lg">
+                            <p className="text-sm text-blue-300">Puntaje Base</p>
+                            <p className="text-2xl font-bold text-blue-100">{baseScore}</p>
                         </div>
 
-                        <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
-                            <p className="text-sm text-green-600 dark:text-green-300">Bono por Tiempo</p>
-                            <p className="text-2xl font-bold text-green-800 dark:text-green-100">+{timeBonus}</p>
+                        <div className="bg-green-900/30 p-4 rounded-lg">
+                            <p className="text-sm text-green-300">Bono por Tiempo</p>
+                            <p className="text-2xl font-bold text-green-100">+{timeBonus}</p>
                         </div>
 
-                        <div className="bg-purple-50 dark:bg-purple-900/30 p-4 rounded-lg">
-                            <p className="text-sm text-purple-600 dark:text-purple-300">Tiempo Empleado</p>
-                            <p className="text-2xl font-bold text-purple-800 dark:text-purple-100">
+                        <div className="bg-purple-900/30 p-4 rounded-lg">
+                            <p className="text-sm text-purple-300">Tiempo Empleado</p>
+                            <p className="text-2xl font-bold text-purple-100">
                                 {Math.floor(timeElapsed / 60)}:{String(timeElapsed % 60).padStart(2, '0')}
                             </p>
                         </div>
@@ -258,13 +258,13 @@ export default function ResultPage() {
             <section className="flex gap-4">
                 <button
                     onClick={() => router.push('/play')}
-                    className="flex-1 bg-blue-600 text-white rounded p-2 cursor-pointer hover:bg-blue-700 transition-colors"
+                    className="flex-1 bg-blue-900 text-white font-semibold rounded p-2 cursor-pointer hover:bg-blue-900/75 transition-colors"
                 >
                     Siguiente Desafío
                 </button>
                 <button
                     onClick={() => router.push('/dashboard')}
-                    className="flex-1 border border-blue-600 text-blue-600 rounded p-2 cursor-pointer hover:bg-blue-600 hover:text-white transition-colors"
+                    className="flex-1 border border-blue-900 text-blue-100 font-semibold rounded p-2 cursor-pointer hover:bg-blue-900/75 hover:text-white transition-colors"
                 >
                     Ir al Dashboard
                 </button>

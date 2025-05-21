@@ -34,7 +34,14 @@ export default function RootLayout({
 }>) {
 
   return (
-    <ClerkProvider appearance={{ baseTheme: dark }}>
+    <ClerkProvider appearance={
+      { baseTheme: dark,
+        variables: {
+          colorPrimary: '#1c398e',
+          colorBackground: '#0a0a0a',
+          colorText: '#ffffff',
+          colorTextOnPrimaryBackground: '#ffffff',
+        } }}>
       <html lang="en">
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <header className="flex justify-end items-center p-4 gap-4 h-16">
