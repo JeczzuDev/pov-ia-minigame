@@ -9,8 +9,8 @@ import { PlusIcon } from 'lucide-react';
 
 // Importación dinámica para evitar problemas de hidratación
 const UrlInput = dynamic(
-  () => import('@/components/play/UrlInput'),
-  { ssr: false }
+    () => import('@/components/play/UrlInput'),
+    { ssr: false }
 );
 
 type Prompt = { id: number; title: string; description: string; level: number };
@@ -75,33 +75,33 @@ export default function PlayPage() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!prompt || loading || !startTimeRef.current) return;
-        
+
         // Detener el temporizador y calcular el tiempo transcurrido
         const endTime = Date.now();
         const timeElapsedInSeconds = Math.floor((endTime - startTimeRef.current) / 1000);
-        
+
         if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
         }
-        
+
         setLoading(true);
         setError(null);
 
         try {
             // Validar que todas las URLs no vacías sean válidas
             const validUrls: string[] = [];
-            
+
             for (let i = 0; i < urls.length; i++) {
                 const url = urls[i].trim();
                 if (url === '') continue;
-                
+
                 if (urlValidations[i] !== true) {
                     setError('Por favor, corrige los errores en las URLs antes de continuar');
                     setLoading(false);
                     return;
                 }
-                
+
                 validUrls.push(url);
             }
 
@@ -109,18 +109,18 @@ export default function PlayPage() {
             const res = await fetch('/api/matches', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    promptId: prompt.id, 
+                body: JSON.stringify({
+                    promptId: prompt.id,
                     resources: validUrls,
                     startTime: startTime,
                     timeElapsed: timeElapsedInSeconds,
                     completedAt: completedAt
                 }),
             });
-            
+
             const json = await res.json();
             if (!res.ok) throw new Error(json.error || 'Error creando partida');
-            
+
             // Redirigir a la pantalla de resultados
             router.push(`/play/result/${json.matchId}`);
         } catch (err: Error | unknown) {
@@ -142,7 +142,7 @@ export default function PlayPage() {
     const startCountdown = () => {
         let counter = 3;
         setCountdown(counter);
-        
+
         const countdownInterval = setInterval(() => {
             counter--;
             if (counter >= 0) {
@@ -167,7 +167,7 @@ export default function PlayPage() {
         const now = Date.now();
         setStartTime(now);
         startTimeRef.current = now;
-        
+
         timerRef.current = setInterval(() => {
             setTimeLeft(prev => {
                 if (prev <= 1) {
@@ -191,17 +191,17 @@ export default function PlayPage() {
 
     if (!isLoaded) return <p className="p-4">Cargando usuario…</p>;
     if (!prompt) return <p className="p-4">Cargando desafío…</p>;
-    
+
     // Mostrar contador inicial o pantalla de carga
     if (countdown !== null || !showGame) {
         return (
-            <div className="fixed inset-0 flex flex-col items-center justify-center bg-black bg-opacity-80 z-50">
+            <div className="fixed inset-0 flex flex-col items-center justify-center bg-gray-900 bg-opacity-80 z-50">
                 <motion.div
                     key={countdown}
                     initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ 
-                        scale: countdown === 0 ? 1.2 : 1, 
-                        opacity: 1 
+                    animate={{
+                        scale: countdown === 0 ? 1.2 : 1,
+                        opacity: 1
                     }}
                     exit={{ scale: 1.5, opacity: 0 }}
                     className="text-white text-9xl font-bold text-center"
@@ -209,7 +209,7 @@ export default function PlayPage() {
                     {countdown === 0 ? '¡Comienza!' : countdown || ''}
                 </motion.div>
                 {countdown === 0 && (
-                    <motion.p 
+                    <motion.p
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="text-white text-2xl mt-8"
@@ -220,9 +220,14 @@ export default function PlayPage() {
             </div>
         );
     }
-    
+
     return (
-        <main className="max-w-xl mx-auto p-4 relative">
+        <main className="max-w-3xl mx-auto p-4 relative">
+            <h2 className="text-2xl font-bold mb-2">
+                Nivel {prompt.level}: {prompt.title}
+            </h2>
+            <p className="text-xl mb-4">{prompt.description}</p>
+
             <div className="mb-6">
                 <div className="flex justify-between items-center mb-1">
                     <span className="text-lg font-semibold">
@@ -233,19 +238,15 @@ export default function PlayPage() {
                     </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div 
+                    <div
                         className="bg-blue-600 h-2.5 rounded-full transition-all duration-1000 ease-linear"
-                        style={{ 
+                        style={{
                             width: `${(timeLeft / GAME_DURATION) * 100}%`,
                             backgroundColor: timeLeft < 10 ? '#ef4444' : timeLeft < 20 ? '#f59e0b' : '#2563eb'
                         }}
                     />
                 </div>
             </div>
-            <h1 className="text-2xl font-bold mb-2">
-                Nivel {prompt.level}: {prompt.title}
-            </h1>
-            <p className="mb-4">{prompt.description}</p>
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 {urls.map((url, i) => (
