@@ -1,4 +1,4 @@
-import { Trophy } from 'lucide-react';
+import { Trophy, UserRound } from 'lucide-react';
 import { SignUpButton } from '@clerk/nextjs';
 
 interface LeaderboardEntry {
@@ -71,7 +71,13 @@ export function Leaderboard({
       <div className="p-6">
         <h2 className="text-xl font-semibold mb-4 text-white">{title}</h2>
 
-        <div className="space-y-2">
+        <div className="space-y-2 overflow-y-auto px-2 max-h-[275px]
+        [&::-webkit-scrollbar]:w-2
+        [&::-webkit-scrollbar-track]:bg-transparent
+        [&::-webkit-scrollbar-thumb]:bg-gray-600
+        [&::-webkit-scrollbar-thumb]:hover:bg-gray-700
+        [&::-webkit-scrollbar-track]:rounded-full
+        [&::-webkit-scrollbar-thumb]:rounded-full">
           {sortedData.map((entry, index) => (
             <div
               key={`${entry.user_id || entry.username}-${index}`}
@@ -92,8 +98,8 @@ export function Leaderboard({
                 </span>
                 {/* Indicador "Tú" */}
                 {currentUserId && entry.user_id === currentUserId && (
-                  <span className="bg-white/50 text-black text-xs font-bold p-2 rounded-md">
-                    Tú
+                  <span className="bg-white/50 text-gray-900 text-xs font-semibold p-1 rounded-md">
+                    <UserRound />
                   </span>
                 )}
               </div>
@@ -108,9 +114,15 @@ export function Leaderboard({
 
         {/* Botón de registro */}
         {showSignUpButton && (
-          <div className="mt-4 pt-4 border-t border-gray-700">
+          <div className="mt-4 pt-4 px-2 border-t border-gray-700">
             <SignUpButton mode="modal">
-              <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded transition-colors">
+              <button className="w-full max-w-3xl mx-auto 
+              bg-blue-600 hover:bg-blue-700 
+              text-white font-semibold rounded-lg 
+              py-3 px-6 shadow-lg hover:shadow-xl 
+              transition-all duration-200 transform 
+              hover:-translate-y-0.5
+              cursor-pointer">
                 Regístrate para guardar tu progreso
               </button>
             </SignUpButton>

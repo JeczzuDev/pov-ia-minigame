@@ -113,29 +113,23 @@ export default function DashboardPage() {
   if (error) return <p className="p-4 text-red-600">Error: {error}</p>;
 
   return (
-    <main className="max-w-3xl mx-auto p-4 space-y-6">
-      <div className="flex items-center gap-3 px-2 mb-1">
-        <h1 className="text-3xl font-bold">POVIA MINIGAME</h1>
-        <div className="relative w-8 h-8">
-          <Image 
-            src="/pov-ia-ico.svg" 
-            alt="POV-IA Logo" 
-            fill
-            className="object-contain"
-            priority
-          />
+    <main className="relative">
+      <div className="max-w-3xl mx-auto p-4 pb-0 space-y-6">
+        <div className="flex items-center gap-3 mb-5">
+          <h2 className="text-xl text-gray-400 font-semibold">Bienvenido al Dashboard</h2>
+          <div className="relative w-6 h-6">
+            <Image
+              src="/pov-ia-icono.svg"
+              alt="POV-IA Logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
         </div>
-      </div>
-      <p className="text-lg text-gray-400 px-2 mb-2 font-semibold">Bienvenido al Dashboard</p>
 
-      <div className="overflow-auto p-2
-      max-h-[calc(100vh-15rem)]
-      [&::-webkit-scrollbar]:w-2
-      [&::-webkit-scrollbar-track]:bg-transparent
-      [&::-webkit-scrollbar-thumb]:bg-gray-600
-      [&::-webkit-scrollbar-thumb]:hover:bg-gray-700
-      [&::-webkit-scrollbar-track]:rounded-full
-      [&::-webkit-scrollbar-thumb]:rounded-full">
+        <h2 className="text-2xl font-bold mt-2">¡Tu eres la IA, responde a los prompts y gana puntos!</h2>
+
         <section>
           {leaderboard.length > 0 && (
             <Leaderboard
@@ -150,7 +144,7 @@ export default function DashboardPage() {
 
         {user && history.length > 0 && (
           <section className="space-y-4">
-            <h2 className="text-xl font-semibold">Tu Historial de Partidas</h2>
+            <h2 className="text-xl text-gray-400 font-semibold">Tu Historial de Partidas</h2>
             <div className="space-y-4">
               {history.map((match) => (
                 <div key={match.id} className="bg-gray-800 rounded-lg p-6 shadow-md">
@@ -242,14 +236,20 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <section className="flex gap-4">
+      <div className="sticky bottom-0 max-w-3xl mx-auto bg-gray-900/80 backdrop-blur-sm p-4 pb-6 mt-4">
         <button
           onClick={() => router.push('/play')}
-          className="flex-1 bg-blue-900 text-white font-semibold rounded p-2 cursor-pointer hover:bg-blue-900/75 transition-colors"
+          className="w-full max-w-3xl mx-auto 
+            bg-blue-600 hover:bg-blue-700 
+            text-white font-semibold rounded-lg 
+            py-3 px-6 shadow-lg hover:shadow-xl 
+            transition-all duration-200 transform 
+            hover:-translate-y-0.5
+            cursor-pointer"
         >
           Empezar a Jugar
         </button>
-      </section>
+      </div>
     </main>
   );
 }

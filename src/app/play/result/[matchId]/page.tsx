@@ -148,20 +148,11 @@ export default function ResultPage() {
     if (loading) return <p className="p-4">Evaluando tus recursos y cargando resultados…</p>;
 
     return (
-        <main className="max-w-2xl mx-auto p-4 space-y-6">
-            <h1 className="text-3xl font-bold p-2 mb-2">Resultados de tu partida</h1>
+        <main className="relative">
+            <div className="max-w-3xl mx-auto p-4 pb-0 space-y-6">
+                <h2 className="text-2xl font-bold">Resultados de tu partida</h2>
 
-            <div className="overflow-y-auto p-2
-             max-h-[calc(100vh-15rem)]
-             [&::-webkit-scrollbar]:w-2
-             [&::-webkit-scrollbar-track]:bg-transparent
-             [&::-webkit-scrollbar-thumb]:bg-gray-600
-             [&::-webkit-scrollbar-thumb]:hover:bg-gray-700
-             [&::-webkit-scrollbar-track]:rounded-full
-             [&::-webkit-scrollbar-thumb]:rounded-full">
                 <section className="bg-gray-800 rounded-lg p-6 shadow-md mb-6">
-                    {/* <h2 className="text-2xl font-bold text-center mb-4 text-gray-900 dark:text-white">Resumen de la Partida</h2> */}
-
                     <div className="mb-6 p-4 pt-0 border-b border-gray-700">
                         <div className="flex justify-between items-center">
                             <span className="text-lg font-semibold text-gray-700 dark:text-gray-200">Puntaje Total:</span>
@@ -191,8 +182,8 @@ export default function ResultPage() {
                     </div>
                 </section>
 
-                <section>
-                    <h2 className="text-xl font-semibold mb-2">Evaluaciones detalladas</h2>
+                <section className="space-y-4">
+                    <h2 className="text-xl text-gray-400 font-semibold">Evaluaciones detalladas</h2>
                     <table className="w-full table-auto border-collapse border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
                         <thead>
                             <tr className="bg-gray-800">
@@ -221,8 +212,8 @@ export default function ResultPage() {
                                         <td className="border border-gray-600 p-3 text-center">
                                             <span
                                                 className={`inline-flex items-center justify-center w-8 h-8 rounded-full ${evaluation.score > 0
-                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'
-                                                        : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-200'
+                                                    : 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200'
                                                     }`}
                                             >
                                                 {evaluation.score}
@@ -255,20 +246,36 @@ export default function ResultPage() {
                 />
             </div>
 
-            <section className="flex gap-4">
-                <button
-                    onClick={() => router.push('/play')}
-                    className="flex-1 bg-blue-900 text-white font-semibold rounded p-2 cursor-pointer hover:bg-blue-900/75 transition-colors"
-                >
-                    Siguiente Desafío
-                </button>
-                <button
-                    onClick={() => router.push('/dashboard')}
-                    className="flex-1 border border-blue-900 text-blue-100 font-semibold rounded p-2 cursor-pointer hover:bg-blue-900/75 hover:text-white transition-colors"
-                >
-                    Ir al Dashboard
-                </button>
-            </section>
+            <div className="sticky bottom-0 max-w-3xl mx-auto bg-gray-900/80 backdrop-blur-sm p-4 pb-6 mt-4">
+                <section className="flex gap-4">
+                    <button
+                        onClick={() => router.push('/play')}
+                        className="flex-1 
+                        bg-blue-600 hover:bg-blue-700 
+                        text-white font-semibold rounded-lg 
+                        p-2 shadow-lg hover:shadow-xl 
+                        transition-all duration-200 transform 
+                        hover:-translate-y-0.5
+                        cursor-pointer"
+                    >
+                        Siguiente Desafío
+                    </button>
+                    <button
+                        onClick={() => router.push('/dashboard')}
+                        // className="flex-1 border border-blue-900 text-blue-100 font-semibold rounded p-2 cursor-pointer hover:bg-blue-900/75 hover:text-white transition-colors"
+                        className="flex-1
+                        border border-blue-900 text-blue-100
+                        hover:bg-blue-700
+                        text-white font-semibold rounded-lg 
+                        p-2 shadow-lg hover:shadow-xl 
+                        transition-all duration-200 transform 
+                        hover:-translate-y-0.5
+                        cursor-pointer"
+                    >
+                        Ir al Dashboard
+                    </button>
+                </section>
+            </div>
         </main>
     );
 }
