@@ -1,23 +1,33 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
+import { PlusIcon } from 'lucide-react';
+
+// Importación dinámica para evitar problemas de hidratación
+const UrlInput = dynamic(
+  () => import('@/components/play/UrlInput'),
+  { ssr: false }
+);
 
 type Prompt = { id: number; title: string; description: string; level: number };
 
-const GAME_DURATION = 60; // 1 minuto de duración del juego
+const GAME_DURATION = 30; // 1 minuto de duración del juego
 
 export default function PlayPage() {
     const [prompt, setPrompt] = useState<Prompt | null>(null);
     const [urls, setUrls] = useState<string[]>(['']);
+    const [urlValidations, setUrlValidations] = useState<boolean[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showGame, setShowGame] = useState(false);
     const [countdown, setCountdown] = useState<number | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(GAME_DURATION);
     const [startTime, setStartTime] = useState<number | null>(null);
+    const [timeUp, setTimeUp] = useState(false);
     const router = useRouter();
     const { isLoaded } = useUser();
     const fetchInProgress = useRef(false);
@@ -39,16 +49,30 @@ export default function PlayPage() {
         });
     }, []);
 
-    const addField = () => {
-        if (urls.length < 4) setUrls([...urls, '']);
-    };
-    const updateField = (i: number, value: string) => {
-        const copy = [...urls];
-        copy[i] = value;
-        setUrls(copy);
-    };
+    const addField = useCallback(() => {
+        if (urls.length < 4) {
+            setUrls(prev => [...prev, '']);
+            setUrlValidations(prev => [...prev, false]);
+        }
+    }, [urls.length]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleUrlChange = useCallback((index: number, value: string) => {
+        setUrls(prev => {
+            const newUrls = [...prev];
+            newUrls[index] = value;
+            return newUrls;
+        });
+    }, []);
+
+    const handleUrlValidation = useCallback((index: number, isValid: boolean) => {
+        setUrlValidations(prev => {
+            const newValidations = [...prev];
+            newValidations[index] = isValid;
+            return newValidations;
+        });
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!prompt || loading || !startTimeRef.current) return;
         
@@ -65,21 +89,29 @@ export default function PlayPage() {
         setError(null);
 
         try {
-            // Validar URLs y comprobar que no se repitan
-            const validUrls = urls.filter((u) => u.trim().length > 0);
-            const uniqueUrls = [...new Set(validUrls)];
-            if (uniqueUrls.length !== validUrls.length) {
-                setError('No se permiten URLs duplicadas');
-                return;
-            }
+            // Validar que todas las URLs no vacías sean válidas
+            const validUrls: string[] = [];
             
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i].trim();
+                if (url === '') continue;
+                
+                if (urlValidations[i] !== true) {
+                    setError('Por favor, corrige los errores en las URLs antes de continuar');
+                    setLoading(false);
+                    return;
+                }
+                
+                validUrls.push(url);
+            }
+
             const completedAt = new Date().toISOString();
             const res = await fetch('/api/matches', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     promptId: prompt.id, 
-                    resources: uniqueUrls,
+                    resources: validUrls,
                     startTime: startTime,
                     timeElapsed: timeElapsedInSeconds,
                     completedAt: completedAt
@@ -131,6 +163,7 @@ export default function PlayPage() {
 
     const startGameTimer = () => {
         setTimeLeft(GAME_DURATION);
+        setTimeUp(false); // Reiniciar el estado de tiempo agotado
         const now = Date.now();
         setStartTime(now);
         startTimeRef.current = now;
@@ -147,12 +180,12 @@ export default function PlayPage() {
         }, 1000);
     };
 
-    const handleTimeout = async () => {
-        // Solo proceder si no hay un envío en curso y el temporizador está activo
-        if (!loading && timerRef.current) {
+    const handleTimeout = () => {
+        // Solo proceder si el temporizador está activo
+        if (timerRef.current) {
             clearInterval(timerRef.current);
             timerRef.current = null;
-            await handleSubmit(new Event('submit') as unknown as React.FormEvent<HTMLFormElement>);
+            setTimeUp(true);
         }
     };
 
@@ -216,35 +249,54 @@ export default function PlayPage() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
                 {urls.map((url, i) => (
-                    <input
+                    <UrlInput
                         key={i}
-                        type="url"
-                        placeholder={`Recurso ${i + 1} (URL)`}
+                        index={i}
                         value={url}
-                        onChange={(e) => updateField(i, e.target.value)}
-                        className="w-full border rounded p-2"
-                        required={false}
+                        onChange={(value) => handleUrlChange(i, value)}
+                        onValidation={handleUrlValidation}
+                        placeholder={`Recurso ${i + 1} (URL)`}
+                        disabled={loading || timeUp}
                     />
                 ))}
 
-                {urls.length < 4 && (
+                {urls.length < 4 && !timeUp && (
                     <button
                         type="button"
                         onClick={addField}
-                        className="text-blue-600 underline cursor-pointer hover:text-blue-700 transition-colors"
+                        disabled={loading}
+                        className="w-full flex items-center justify-center
+                        border border-blue-900 text-blue-100
+                        hover:bg-blue-700
+                        text-white font-semibold rounded-lg 
+                        p-2 shadow-lg hover:shadow-xl 
+                        transition-all duration-200 transform 
+                        hover:-translate-y-0.5
+                        cursor-pointer
+                        disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        + Añadir otro recurso
+                        <PlusIcon className="w-5 h-5 mr-2" /> Añadir otro recurso
                     </button>
                 )}
 
-                {error && <p className="text-red-600">{error}</p>}
+                {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
+                        {error}
+                    </div>
+                )}
 
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-blue-600 text-white rounded p-2 disabled:opacity-50 cursor-pointer hover:bg-blue-700 transition-colors"
+                    className="w-full 
+                    bg-blue-600 hover:bg-blue-700 
+                    text-white font-semibold rounded-lg 
+                    p-2 shadow-lg hover:shadow-xl 
+                    transition-all duration-200 transform 
+                    hover:-translate-y-0.5
+                    cursor-pointer"
                 >
-                    {loading ? 'Enviando…' : 'Enviar recursos'}
+                    {loading ? 'Enviando…' : timeUp ? '¡Se acabó el tiempo! Enviar recursos' : 'Enviar recursos'}
                 </button>
             </form>
         </main>
